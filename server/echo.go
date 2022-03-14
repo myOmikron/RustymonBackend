@@ -6,6 +6,7 @@ import (
 	"RustymonBackend/utils"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/gommon/log"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -15,6 +16,9 @@ var c = utils.ChangeContext
 func StartServer() {
 	// Echo instance
 	e := echo.New()
+
+	// Set debug level
+	e.Logger.SetLevel(log.DEBUG)
 
 	// Open DB
 	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
@@ -39,6 +43,7 @@ func StartServer() {
 
 	// Routes
 	e.GET("/users", c(handler.GetUsers))
+	e.POST("/register", c(handler.Register))
 
 	// Start server
 	e.Logger.Fatal(e.Start(":8000"))
