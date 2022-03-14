@@ -21,6 +21,9 @@ func Register(c utils.Context) error {
 	if err := json.Unmarshal(b, &f); err != nil {
 		return c.JSON(400, JsonResponse{Error: err})
 	}
+	if f.Username == "" || f.Nick == "" || f.Password == "" {
+		return c.JSON(400, JsonResponse{Message: "Parameter username, nick and password must not be empty"})
+	}
 
 	hashedPw, err := bcrypt.GenerateFromPassword([]byte(f.Password), 12)
 	if err != nil {
