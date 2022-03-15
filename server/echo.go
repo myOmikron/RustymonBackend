@@ -2,10 +2,11 @@ package server
 
 import (
 	"RustymonBackend/handler"
+	"RustymonBackend/middleware"
 	"RustymonBackend/models"
 	"RustymonBackend/utils"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	echoMiddleware "github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -27,7 +28,10 @@ func StartServer() {
 	}
 
 	// Migrate
-	if err := db.AutoMigrate(&models.User{}); err != nil {
+	if err := db.AutoMigrate(
+		&models.User{},
+		&models.Session{},
+	); err != nil {
 		panic(err.Error())
 	}
 
@@ -38,13 +42,18 @@ func StartServer() {
 			return next(cc)
 		}
 	})
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
+	e.Use(middleware.Session(db))
+	e.Use(echoMiddleware.Logger())
+	e.Use(echoMiddleware.Recover())
 
 	// Routes
 	e.GET("/info", c(handler.Info))
 	e.GET("/users", c(handler.GetUsers))
+
 	e.POST("/register", c(handler.Register))
+	e.POST("/login", c(handler.Login))
+
+	e.GET("/test", c(handler.Test))
 
 	// Start server
 	e.Logger.Fatal(e.Start(":8000"))
