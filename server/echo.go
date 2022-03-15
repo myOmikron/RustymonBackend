@@ -42,6 +42,7 @@ func StartServer() {
 	e.Use(middleware.Recover())
 
 	// Routes
+	e.GET("/info", c(handler.Info))
 	e.GET("/users", c(handler.GetUsers))
 	e.POST("/register", c(handler.Register))
 
