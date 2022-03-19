@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/myOmikron/echotools/auth"
-	"github.com/myOmikron/echotools/session"
+	"github.com/myOmikron/echotools/middleware"
 	u "github.com/myOmikron/echotools/utility"
 	"io/ioutil"
 )
@@ -35,7 +35,7 @@ func Login(c *Context) error {
 		c.Logger().Info(err)
 		return c.JSON(403, u.JsonResponse{Error: ErrLoginFailed.Error()})
 	} else {
-		if err := session.Login(user, c); err != nil {
+		if err := middleware.Login(user, c); err != nil {
 			return c.JSON(500, u.JsonResponse{Error: err.Error()})
 		}
 	}
