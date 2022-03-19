@@ -1,50 +1,51 @@
 package handler
 
 import (
-	"RustymonBackend/models"
-	"RustymonBackend/utils"
 	"encoding/json"
-	"golang.org/x/crypto/bcrypt"
+	"errors"
+	"fmt"
+	"github.com/myOmikron/echotools/db"
+	u "github.com/myOmikron/echotools/utility"
+	"github.com/myOmikron/echotools/utilitymodels"
 	"io/ioutil"
+	"net/mail"
 )
+
+var ErrUsernameOrEmailTaken = errors.New("username or email already exists")
 
 type RegisterForm struct {
 	Username string
 	Password string
 	Nick     string
+	Email    string
 }
 
-func Register(c utils.Context) error {
+func Register(c *Context) error {
 	var f RegisterForm
 	b, _ := ioutil.ReadAll(c.Request().Body)
 
 	if err := json.Unmarshal(b, &f); err != nil {
-		return c.JSON(400, JsonResponse{Error: err})
+		return c.JSON(400, u.JsonResponse{Error: err.Error()})
 	}
-	if f.Username == "" || f.Nick == "" || f.Password == "" {
-		return c.JSON(400, JsonResponse{Message: "Parameter username, nick and password must not be empty"})
-	}
-
-	hashedPw, err := bcrypt.GenerateFromPassword([]byte(f.Password), 12)
-	if err != nil {
-		return c.JSON(500, JsonResponse{Error: err})
+	if f.Username == "" || f.Nick == "" || f.Password == "" || f.Email == "" {
+		return c.JSON(400, u.JsonResponse{Error: ErrParameterMissing.Error()})
 	}
 
-	u := models.User{
-		Username: f.Username,
-		Nickname: f.Nick,
-		Password: string(hashedPw),
+	if address, err := mail.ParseAddress(f.Email); err != nil {
+		return c.JSON(400, u.JsonResponse{Error: fmt.Sprintf("No valid mail provided: %s", err.Error())})
+	} else {
+		f.Email = address.Address
 	}
 
 	var count int64
-	c.DB.Find(&models.User{}, "username = ?", f.Username).Count(&count)
+	db.DB.Find(&utilitymodels.User{}, "username = ? OR email = ?", f.Username, f.Email).Count(&count)
 	if count > 0 {
-		return c.JSON(409, JsonResponse{Message: "User with that username already exists"})
+		return c.JSON(409, u.JsonResponse{Error: ErrUsernameOrEmailTaken.Error()})
 	}
 
-	if tx := c.DB.Create(&u); tx.Error != nil {
-		return c.JSON(500, JsonResponse{Error: err})
+	if _, err := db.CreateUser(f.Username, f.Password, f.Email, true); err != nil {
+		return err
 	}
 
-	return c.JSON(200, JsonResponse{Success: true, Message: "Registration was successful"})
+	return c.JSON(200, u.JsonResponse{Success: true})
 }

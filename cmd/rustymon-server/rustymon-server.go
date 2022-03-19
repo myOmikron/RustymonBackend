@@ -1,8 +1,8 @@
 package main
 
 import (
-	"RustymonBackend/server"
 	"github.com/hellflame/argparse"
+	"github.com/myOmikron/RustymonBackend/server"
 	"os"
 )
 

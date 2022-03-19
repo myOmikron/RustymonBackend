@@ -1,8 +1,14 @@
 package handler
 
-type JsonResponse struct {
-	Success bool        `json:"success"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
-	Error   interface{} `json:"error"`
+import (
+	"errors"
+	"github.com/labstack/echo/v4"
+	"github.com/myOmikron/echotools/middleware"
+)
+
+var ErrParameterMissing = errors.New("parameter is missing")
+
+type Context struct {
+	echo.Context
+	middleware.SessionContext
 }
