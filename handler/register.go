@@ -16,7 +16,6 @@ var ErrUsernameOrEmailTaken = errors.New("username or email already exists")
 type RegisterForm struct {
 	Username string
 	Password string
-	Nick     string
 	Email    string
 }
 
@@ -27,7 +26,7 @@ func Register(c *Context) error {
 	if err := json.Unmarshal(b, &f); err != nil {
 		return c.JSON(400, u.JsonResponse{Error: err.Error()})
 	}
-	if f.Username == "" || f.Nick == "" || f.Password == "" || f.Email == "" {
+	if f.Username == "" || f.Password == "" || f.Email == "" {
 		return c.JSON(400, u.JsonResponse{Error: ErrParameterMissing.Error()})
 	}
 
