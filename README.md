@@ -1,5 +1,3 @@
-# Rustymon Backend
-
 ```
  ______
 |  ___ \            _
@@ -42,17 +40,27 @@ This project also comes with a CLI tool named `rustymon`.
 ## API Usage
 
 ### Account registration
-
 - Method: `POST`
 - Endpoint: `/register`
 
 **Body**:
 ```json
 {
-    "username": "",
-    "password": "",
-    "email": "",
-    "trainer_name": ""
+  "username": "",
+  "password": "",
+  "email": "",
+  "trainer_name": ""
 }
 ```
 
+### Serverinfo
+- Method: `GET`
+- Endpoint: `/serverinfo`
+
+**Body**:
+```json
+{
+  "version": 0,
+  "registration_disabled": false
+}
+```

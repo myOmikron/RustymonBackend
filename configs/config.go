@@ -8,7 +8,9 @@ import (
 	"strings"
 )
 
-var AllowedDrivers = []string{"sqlite", "mysql", "postgresql"}
+var Config *RustymonConfig
+
+var allowedDrivers = []string{"sqlite", "mysql", "postgresql"}
 
 type Server struct {
 	ListenAddress string
@@ -24,9 +26,14 @@ type Database struct {
 	Password string
 }
 
+type Rustymon struct {
+	RegistrationDisabled bool
+}
+
 type RustymonConfig struct {
 	Server   Server
 	Database Database
+	Rustymon Rustymon
 }
 
 type ConfigError struct {
@@ -55,9 +62,9 @@ func (conf *RustymonConfig) CheckConfig() *ConfigError {
 	}
 
 	// Check database part
-	if !utils.Contains(conf.Database.Driver, AllowedDrivers) {
+	if !utils.Contains(conf.Database.Driver, allowedDrivers) {
 		return &ConfigError{
-			Err:       errors.New(fmt.Sprintf("driver must be in range: %s", strings.Join(AllowedDrivers, ","))),
+			Err:       errors.New(fmt.Sprintf("driver must be in range: %s", strings.Join(allowedDrivers, ","))),
 			Section:   "[Database]",
 			Parameter: "Driver",
 		}

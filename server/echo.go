@@ -61,6 +61,8 @@ func StartServer(configPath string) {
 		os.Exit(1)
 	}
 
+	configs.Config = &config
+
 	// Echo instance
 	e := echo.New()
 	e.HideBanner = true
@@ -152,7 +154,9 @@ func StartServer(configPath string) {
 	e.GET("/logout", middleware.Wrap(handler.Logout))
 	e.POST("/logout", middleware.Wrap(handler.Logout))
 
-	e.POST("/register", middleware.Wrap(handler.Register))
+	if !config.Rustymon.RegistrationDisabled {
+		e.POST("/register", middleware.Wrap(handler.Register))
+	}
 	e.POST("/login", middleware.Wrap(handler.Login))
 
 	fmt.Printf("\nListening on %s\n", color.Colorize(color.PURPLE, config.GetListenString()))
