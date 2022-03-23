@@ -53,6 +53,27 @@ This project also comes with a CLI tool named `rustymon`.
 }
 ```
 
+### Login
+- Method: `POST`
+- Endpoint: `/login`
+
+This endpoint is used to log a user in. If the request succeeds, a session cookie will be attached.
+Attach it on all endpoints that require authentication.
+
+**Body**:
+```json
+{
+  "username": "",
+  "password": ""
+}
+```
+
+### Logout
+- Method: `GET` or `POST`
+- Endpoint: `/logout`
+
+This endpoint is used to log out a user. It also invalidates any session cookies sent to the server.
+
 ### Serverinfo
 - Method: `GET`
 - Endpoint: `/serverinfo`
