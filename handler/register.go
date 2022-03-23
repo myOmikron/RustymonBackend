@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/myOmikron/RustymonBackend/models"
 	"github.com/myOmikron/echotools/db"
 	u "github.com/myOmikron/echotools/utility"
 	"github.com/myOmikron/echotools/utilitymodels"
@@ -14,9 +15,10 @@ import (
 var ErrUsernameOrEmailTaken = errors.New("username or email already exists")
 
 type RegisterForm struct {
-	Username string
-	Password string
-	Email    string
+	Username    string `json:"username"`
+	Password    string `json:"password"`
+	Email       string `json:"email"`
+	TrainerName string `json:"trainer_name"`
 }
 
 func Register(c *Context) error {
@@ -26,7 +28,7 @@ func Register(c *Context) error {
 	if err := json.Unmarshal(b, &f); err != nil {
 		return c.JSON(400, u.JsonResponse{Error: err.Error()})
 	}
-	if f.Username == "" || f.Password == "" || f.Email == "" {
+	if f.Username == "" || f.Password == "" || f.Email == "" || f.TrainerName == "" {
 		return c.JSON(400, u.JsonResponse{Error: ErrParameterMissing.Error()})
 	}
 
@@ -42,8 +44,16 @@ func Register(c *Context) error {
 		return c.JSON(409, u.JsonResponse{Error: ErrUsernameOrEmailTaken.Error()})
 	}
 
-	if _, err := db.CreateUser(f.Username, f.Password, f.Email, true); err != nil {
-		return err
+	user, err := db.CreateUser(f.Username, f.Password, f.Email, true)
+	if err != nil {
+		return c.JSON(500, u.JsonResponse{Error: err.Error()})
+	}
+	player := models.Player{
+		User:        *user,
+		TrainerName: f.TrainerName,
+	}
+	if err := db.DB.Create(&player).Error; err != nil {
+		return c.JSON(500, u.JsonResponse{Error: err.Error()})
 	}
 
 	return c.JSON(200, u.JsonResponse{Success: true})
