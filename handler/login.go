@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"encoding/json"
 	"errors"
 	"github.com/myOmikron/echotools/auth"
 	"github.com/myOmikron/echotools/middleware"
@@ -12,8 +11,8 @@ import (
 var ErrLoginFailed = errors.New("login failed")
 
 type LoginForm struct {
-	Username string
-	Password string
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 func Login(c *Context) error {
