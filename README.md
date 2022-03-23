@@ -1,6 +1,16 @@
 # Rustymon Backend
 
-The backend for Rustymon. It provides the API for the android app.
+```
+ ______
+|  ___ \            _
+| |___) |_   _  ___| |_ _   _ ____   ___  ____  
+|  __  /| | | |/___)  _) | | |    \ / _ \|  _ \
+| |  \ \\ |_| |___ | |_| |_| | | | | |_| | | | |
+|_|   \_|\____(___/ \___)__  |_|_|_|\___/|_| |_|
+                       (____/   & a bunch of other languages
+```
+
+The backend for Rustymon. It provides the API for the android app as well as a CLI tool. 
 
 ## Installation
 
