@@ -1,0 +1,31 @@
+[Unit]
+Description=Rustymon Server
+After=network.target
+
+[Service]
+Type=simple
+DynamicUser=yes
+# Implies:
+# PrivateTmp=true
+# ProtectSystem=strict
+# ProtectHome=read-only
+# RemoveIPC=yes
+
+LogsDirectory=rustymon-server
+StateDirectory=rustymon-server
+
+# RuntimeDirectory=
+WorkingDirectory=/var/lib/rustymon-server
+ExecStart=/usr/local/bin/rustymon-server start
+ExecReload=/usr/bin/kill -s HUP $MAINPID
+ExecStop=/usr/bin/kill -s INT $MAINPID
+
+Restart=always
+RestartSec=3
+# Send SIGTERM to each process
+KillMode=control-group
+TimeoutStopSec=3
+
+
+[Install]
+WantedBy=multi-user.target
