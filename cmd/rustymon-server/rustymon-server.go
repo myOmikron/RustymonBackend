@@ -2,19 +2,19 @@ package main
 
 import (
 	"github.com/hellflame/argparse"
-	"github.com/myOmikron/RustymonBackend/server"
+	"github.com/myOmikron/RustymonBackend/app"
 	"os"
 )
 
 func main() {
 	parser := argparse.NewParser("", "", nil)
 
-	startParser := parser.AddCommand("start", "Start the server", &argparse.ParserConfig{
+	startParser := parser.AddCommand("start", "Start the app", &argparse.ParserConfig{
 		DisableDefaultShowHelp: true,
 	})
 	configPath := startParser.String("", "config-path", &argparse.Option{
 		Help:    "Specify an alternative path to configuration file. Defaults to /etc/rustymon/rustymon.",
-		Default: "/etc/rustymon/rustymon.toml",
+		Default: "/etc/rustymon-app/config.toml",
 	})
 
 	if err := parser.Parse(nil); err != nil {
@@ -23,6 +23,6 @@ func main() {
 
 	switch {
 	case startParser.Invoked:
-		server.StartServer(*configPath)
+		app.StartServer(*configPath)
 	}
 }

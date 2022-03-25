@@ -1,4 +1,4 @@
-package server
+package app
 
 import (
 	"errors"
@@ -11,7 +11,7 @@ import (
 	"github.com/myOmikron/RustymonBackend/handler"
 	"github.com/myOmikron/RustymonBackend/models"
 	"github.com/myOmikron/echotools/color"
-	"github.com/myOmikron/echotools/db"
+	"github.com/myOmikron/echotools/database"
 	"github.com/myOmikron/echotools/execution"
 	"github.com/myOmikron/echotools/middleware"
 	"github.com/myOmikron/echotools/utilitymodels"
@@ -42,15 +42,15 @@ func StartServer(configPath string) {
 	color.Println(color.BLUE, asciiArt)
 	fmt.Println()
 
-	config := configs.RustymonConfig{}
+	config := &configs.RustymonConfig{}
 
 	if configBytes, err := ioutil.ReadFile(configPath); errors.Is(err, fs.ErrNotExist) {
 		color.Printf(color.RED, "Config was not found at %s\n", configPath)
-		b, _ := toml.Marshal(&config)
+		b, _ := toml.Marshal(config)
 		fmt.Print(string(b))
 		os.Exit(1)
 	} else {
-		if err := toml.Unmarshal(configBytes, &config); err != nil {
+		if err := toml.Unmarshal(configBytes, config); err != nil {
 			panic(err)
 		}
 	}
@@ -60,8 +60,6 @@ func StartServer(configPath string) {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
-
-	configs.Config = &config
 
 	// Echo instance
 	e := echo.New()
@@ -97,7 +95,7 @@ func StartServer(configPath string) {
 		}
 		driver = postgres.Open(dsn.String())
 	}
-	db.Initialize(
+	db := database.Initialize(
 		driver,
 		&utilitymodels.Session{},
 
@@ -114,21 +112,21 @@ func StartServer(configPath string) {
 	// Insert Pokémon up to ID 809
 	fmt.Print("Populating pokemon\t\t...\t")
 	for i := uint(1); i < 810; i++ {
-		db.DB.FirstOrCreate(&models.Pokemon{ID: i})
+		db.FirstOrCreate(&models.Pokemon{ID: i})
 	}
 	color.Println(color.GREEN, "done")
 
 	// Insert Moves up to ID 676
 	fmt.Print("Train pokemon to learn moves\t...\t")
 	for i := uint(1); i < 678; i++ {
-		db.DB.FirstOrCreate(&models.Move{ID: i})
+		db.FirstOrCreate(&models.Move{ID: i})
 	}
 	color.Println(color.GREEN, "done")
 
 	// Insert Items up to ID 633
 	fmt.Print("Buying a bunch of items\t\t...\t")
 	for i := uint(1); i < 634; i++ {
-		db.DB.FirstOrCreate(&models.Item{ID: i})
+		db.FirstOrCreate(&models.Item{ID: i})
 	}
 	color.Println(color.GREEN, "done")
 
@@ -141,23 +139,17 @@ func StartServer(configPath string) {
 	e.Use(echoMiddleware.Gzip())
 	f := false
 	age := time.Hour * 24
-	e.Use(middleware.Session(&middleware.SessionConfig{
-		Secure:         &f,
-		CookieAge:      &age,
-		DisableLogging: true,
-	}))
+	e.Use(middleware.Session(
+		db,
+		&middleware.SessionConfig{
+			Secure:         &f,
+			CookieAge:      &age,
+			DisableLogging: true,
+		},
+	))
 
 	// Routes
-	e.GET("/info", middleware.Wrap(handler.Info))
-	e.POST("/info", middleware.Wrap(handler.Info))
-
-	e.GET("/logout", middleware.Wrap(handler.Logout))
-	e.POST("/logout", middleware.Wrap(handler.Logout))
-
-	if !config.Rustymon.RegistrationDisabled {
-		e.POST("/register", middleware.Wrap(handler.Register))
-	}
-	e.POST("/login", middleware.Wrap(handler.Login))
+	defineRoutes(e, config, db)
 
 	fmt.Printf("\nListening on %s\n", color.Colorize(color.PURPLE, config.GetListenString()))
 	execution.SignalStart(e, config.GetListenString(), func() {

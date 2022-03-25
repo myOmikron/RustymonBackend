@@ -8,8 +8,6 @@ import (
 	"strings"
 )
 
-var Config *RustymonConfig
-
 var allowedDrivers = []string{"sqlite", "mysql", "postgresql"}
 
 type Server struct {
@@ -26,13 +24,22 @@ type Database struct {
 	Password string
 }
 
+type Mail struct {
+	Host     string
+	Port     uint16
+	User     string
+	Password string
+}
+
 type Rustymon struct {
-	RegistrationDisabled bool
+	RegistrationDisabled  bool
+	PasswordResetDisabled bool
 }
 
 type RustymonConfig struct {
 	Server   Server
 	Database Database
+	Mail     Mail
 	Rustymon Rustymon
 }
 
@@ -55,7 +62,7 @@ func (c *ConfigError) Error() string {
 func (conf *RustymonConfig) CheckConfig() *ConfigError {
 	if conf.Server.ListenPort < 1 || conf.Server.ListenPort > 1<<15-1 {
 		return &ConfigError{
-			Err:       errors.New("invalid server port"),
+			Err:       errors.New("invalid app port"),
 			Section:   "[Server]",
 			Parameter: "ListenPort",
 		}
