@@ -72,7 +72,7 @@ type Player struct {
 	Language    uint8              `json:"language" gorm:"default:0"` // Language: 0: English; 1: German
 	Female      bool               `json:"female"`
 	Money       uint32             `json:"money" gorm:"default:0"`
-	Friends     *[]Player          `json:"friends" gorm:"many2many:player_friends;"`
+	Friends     []*Player          `json:"friends" gorm:"many2many:player_friends;"`
 	Items       []PlayerItem       `json:"items" gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	Pokedex     []PokedexEntry     `json:"pokedex" gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	PokeBox     []PlayerPokemon    `json:"poke_box" gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
