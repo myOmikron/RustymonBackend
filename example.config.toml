@@ -1,0 +1,33 @@
+[Database]
+# Must be one of [sqlite, mysql, postgresql]
+# In case of sqlite only Driver and Name are required. 
+Driver = ""
+# Name specifies the name of the database or the path of the file in case of sqlite.
+# 
+# sqlite specific:
+#   You can specify either an absolute or relative path.
+#   If a relative path is used, the WorkingDirectory setting from the service file applies.
+Name = ""
+# The following setting only apply if Driver is one of [mysql, postgresql]
+Host = ""
+Port = 0
+User = ""
+Password = ""
+
+[Mail]
+Host = ""
+Port = 0
+User = ""
+Password = ""
+
+[Server]
+ListenAddress = "127.0.0.1"
+ListenPort = 8080
+
+[Rustymon]
+# Registration via app can be disabled by changing this field to true.
+# This will remove the API endpoint "/register". Registration via CLI is still possible.
+RegistrationDisabled = false
+# As configurting a mailserver is required to allow self-service password reset, it is possible to disable this
+# functionality with this setting
+PasswordResetDisabled = false
