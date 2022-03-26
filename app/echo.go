@@ -15,6 +15,7 @@ import (
 	"github.com/myOmikron/echotools/execution"
 	"github.com/myOmikron/echotools/middleware"
 	"github.com/myOmikron/echotools/utilitymodels"
+	"github.com/myOmikron/echotools/worker"
 	"github.com/pelletier/go-toml"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
@@ -130,7 +131,13 @@ func StartServer(configPath string) {
 	}
 	color.Println(color.GREEN, "done")
 
-	// Set session middleware config
+	// WorkerPool
+	poolConf := &worker.PoolConfig{
+		NumWorker: 8,
+		QueueSize: 80,
+	}
+	wp := worker.NewPool(poolConf)
+	wp.Start()
 
 	// Middleware
 	e.Use(middleware.CustomContext(&handler.Context{}))
@@ -149,7 +156,7 @@ func StartServer(configPath string) {
 	))
 
 	// Routes
-	defineRoutes(e, config, db)
+	defineRoutes(e, config, db, wp)
 
 	fmt.Printf("\nListening on %s\n", color.Colorize(color.PURPLE, config.GetListenString()))
 	execution.SignalStart(e, config.GetListenString(), func() {
