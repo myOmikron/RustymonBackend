@@ -100,14 +100,29 @@ func StartServer(configPath string) {
 		driver,
 		&utilitymodels.Session{},
 
+		// Static
+		&models.Modifier{},
+
 		&models.Move{},
-		&models.Pokemon{},
-		&models.PokedexEntry{},
 		&models.Item{},
+		&models.Pokemon{},
+		&models.SpawnArea{},
+
+		&models.WeatherType{},
+		&models.MoonType{},
+		&models.TimeType{},
+
+		&models.HeldItemCondition{},
+		&models.Condition{},
+		&models.PokemonSpawnRelation{},
+
+		// Player specific
+		&models.PokedexEntry{},
 		&models.PlayerItem{},
-		&models.Player{},
 		&models.PlayerPokemonMove{},
 		&models.PlayerPokemon{},
+
+		&models.Player{},
 	)
 
 	// Insert Pokémon up to ID 809
@@ -141,7 +156,11 @@ func StartServer(configPath string) {
 
 	// Middleware
 	e.Use(middleware.CustomContext(&handler.Context{}))
-	e.Use(echoMiddleware.Logger())
+	e.Use(echoMiddleware.LoggerWithConfig(echoMiddleware.LoggerConfig{
+		Format:           "",
+		CustomTimeFormat: time.RFC1123Z,
+		Output:           os.Stdout,
+	}))
 	e.Use(echoMiddleware.Recover())
 	e.Use(echoMiddleware.Gzip())
 	f := false
