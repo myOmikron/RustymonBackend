@@ -14,7 +14,7 @@ func main() {
 	})
 	configPath := startParser.String("", "config-path", &argparse.Option{
 		Help:    "Specify an alternative path to configuration file. Defaults to /etc/rustymon/rustymon.",
-		Default: "/etc/rustymon-app/config.toml",
+		Default: "/etc/rustymon-server/config.toml",
 	})
 
 	if err := parser.Parse(nil); err != nil {
