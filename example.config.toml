@@ -16,7 +16,13 @@ Password = ""
 
 [Mail]
 Host = ""
-Port = 0
+# Based on the port, TLS support will be enabled or disabled
+Port = 587
+# The From string of the mail in the format RFC5322.
+# E.g.: Rustymon <rustymon@example.com>
+# or: rustymon@example.com
+From = ""
+# The user to perform the login at the mail server.
 User = ""
 Password = ""
 

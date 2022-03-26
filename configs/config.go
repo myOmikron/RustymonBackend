@@ -27,6 +27,7 @@ type Database struct {
 type Mail struct {
 	Host     string
 	Port     uint16
+	From     string
 	User     string
 	Password string
 }
