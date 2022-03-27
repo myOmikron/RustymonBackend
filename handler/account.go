@@ -284,6 +284,7 @@ func (a *AccountHandler) ConfirmPasswordReset() echo.HandlerFunc {
 			return c.Render(200, "error", ErrTokenInvalid.Error())
 		}
 
+		a.DB.Delete(&pwReset)
 		return c.Render(200, "success", "Your password was changed")
 
 	})
