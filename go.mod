@@ -8,7 +8,7 @@ require (
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
 	github.com/labstack/echo/v4 v4.7.2
 	github.com/labstack/gommon v0.3.1
-	github.com/myOmikron/echotools v0.0.0-20220326025444-e450badfef81
+	github.com/myOmikron/echotools v0.0.0-20220327013231-6c74376ca687
 	github.com/pelletier/go-toml v1.9.4
 	gorm.io/driver/mysql v1.3.2
 	gorm.io/driver/postgres v1.3.1
@@ -42,6 +42,7 @@ require (
 	golang.org/x/sys v0.0.0-20220325203850-36772127a21f // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20220224211638-0e9765cccd65 // indirect
+	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 )
 
 replace github.com/myOmikron/echotools => /home/omikron/git/echotools

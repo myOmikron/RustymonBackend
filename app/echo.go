@@ -4,10 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/gommon/log"
+	log2 "github.com/labstack/gommon/log"
 	"github.com/myOmikron/RustymonBackend/configs"
 	"github.com/myOmikron/echotools/color"
 	"github.com/myOmikron/echotools/execution"
+	"github.com/myOmikron/echotools/logging"
 	"github.com/myOmikron/echotools/worker"
 	"github.com/pelletier/go-toml"
 	"html/template"
@@ -15,6 +16,8 @@ import (
 	"io/ioutil"
 	"os"
 )
+
+var log logging.Logger
 
 var asciiArt = `
  ______
@@ -26,9 +29,6 @@ var asciiArt = `
                         (____/   & a bunch of other languages`
 
 func StartServer(configPath string) {
-	color.Println(color.BLUE, asciiArt)
-	fmt.Println()
-
 	config := &configs.RustymonConfig{}
 
 	if configBytes, err := ioutil.ReadFile(configPath); errors.Is(err, fs.ErrNotExist) {
@@ -48,13 +48,26 @@ func StartServer(configPath string) {
 		os.Exit(1)
 	}
 
+	// Logging
+	logging.Initialize(&logging.Config{
+		LogQueue:      config.Logging.LogQueueSize,
+		LogFile:       config.Logging.LogFile,
+		LogMaxDays:    config.Logging.LogMaxDays,
+		LogMaxBackups: config.Logging.LogMaxBackups,
+		LogMaxSize:    config.Logging.LogMaxCapacity,
+	})
+
+	log = logging.GetLogger("app")
+
 	// Echo instance
 	e := echo.New()
 	e.HideBanner = true
 	e.HidePort = true
+	// Disable default logger as it just sucks
+	e.Logger.SetLevel(log2.OFF)
 
-	// Set debug level
-	e.Logger.SetLevel(log.DEBUG)
+	color.Println(color.BLUE, asciiArt)
+	fmt.Println()
 
 	// Initialize DB
 	db := InitializeDatabase(config)
@@ -79,8 +92,16 @@ func StartServer(configPath string) {
 	// Routes
 	defineRoutes(e, config, db, wp)
 
-	fmt.Printf("\nListening on %s\n", color.Colorize(color.PURPLE, config.GetListenString()))
-	execution.SignalStart(e, config.GetListenString(), func() {
-		StartServer(configPath)
+	log.Infof("Listening on %s", color.Colorize(color.PURPLE, config.GetListenString()))
+	execution.SignalStart(e, config.GetListenString(), &execution.Config{
+		ReloadFunc: func() {
+			StartServer(configPath)
+		},
+		StopFunc: func() {
+			logging.Stop()
+		},
+		TerminateFunc: func() {
+			logging.Stop()
+		},
 	})
 }
