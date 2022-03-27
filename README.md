@@ -13,7 +13,9 @@ The backend for Rustymon. It provides the API for the android app as well as a C
 ## Installation
 
 ### Requirements
-As of now, only `go` in the version 1.18 and `make` are requirements.
+As of now, only `go` in the version 1.18 and `make` are requirements for building.
+
+Additional, the use of `nginx` as reverse proxy is encouraged.
 
 ### Build
 To build the project, simply run:
@@ -23,6 +25,58 @@ make && sudo make install
 ```
 This will compile the project, move the binaries to `/usr/bin/`, create `/etc/rustymon-server/` with its 
 corresponding example configuration files as well as install the systemd unit files.
+
+### Additional steps
+As running any binary with root context is generelly a bad idea, the service file uses systemd's 
+`DynamicUser` option to set the context to a minimum. 
+As only root is able to bind to any port under 1000, you should use a reverse proxy for binding to port
+80 and 443. It also should serve the static files.
+
+**Example nginx configuration**:
+```nginx
+server  {
+    listen 80;
+    listen [::]:80;
+
+    server_name YOUR_DOMAIN_GOES_HERE;
+
+    // Redirect to port 443 to enforce encryption
+    return 302 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+
+    // TODO: Set certificate + privkey
+    ssl_certificate /PATH/TO/FULLCHAIN;
+    ssl_certificate_key /PATH/TO/PRIVKEY;
+
+    server_name YOUR_DOMAIN_GOES_HERE;
+
+    // Static files should be served with nginx
+    location /static {
+        // TODO: Set path to directory above static dir
+        root /PATH/TO/STATIC/FILES;
+        try_files $uri $uri/ =404;
+    }
+
+    // This is the location of rustymon-server
+    location / {
+        // TODO: Set address to host, port combination you set in config.toml
+        proxy_pass http://LOCALBIND; 
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; 
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+Set all `TODO` values required in the comments, reload nginx and you're good to go.
 
 ### Uninstall
 To uninstall, run:
