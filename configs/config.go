@@ -17,6 +17,14 @@ type Server struct {
 	TemplateDir   string
 }
 
+type Logging struct {
+	LogFile        string
+	LogQueueSize   int
+	LogMaxCapacity int
+	LogMaxDays     int
+	LogMaxBackups  int
+}
+
 type Database struct {
 	Driver   string
 	Name     string
@@ -41,6 +49,7 @@ type Rustymon struct {
 
 type RustymonConfig struct {
 	Server   Server
+	Logging  Logging
 	Database Database
 	Mail     Mail
 	Rustymon Rustymon
@@ -102,6 +111,7 @@ func (conf *RustymonConfig) CheckConfig() *ConfigError {
 		}
 	}
 
+	// TODO Add more checks
 	return nil
 }
 

@@ -34,6 +34,17 @@ ListenPort = 8080
 PublicURI = ""
 TemplateDir = "templates/"
 
+[Logging]
+LogFile = "/var/log/rustymon-server/rustymon.log"
+# This specifies the size in MB a log file can have until a rotation is executed.
+LogMaxCapacity = 20
+# Specifies the number of days until, regarding of size, a rotation is executed.
+LogMaxDays = 7
+# Specifies the number of backups to retain
+LogMaxBackups = 4
+# Sets the queue size for the logger. If set to 0, a logging call will be blocking
+LogQueueSize = 100
+
 [Rustymon]
 # Registration via app can be disabled by changing this field to true.
 # This will remove the API endpoint "/register". Registration via CLI is still possible.
