@@ -43,8 +43,7 @@ type PokemonSpawnRelation struct {
 	ID                uint                `gorm:"primarykey"`
 	PokemonID         uint                `json:"pokemon_id" gorm:"not null;constraint:OnDelete:CASCADE;"`
 	Pokemon           Pokemon             `json:"-"`
-	SpawnAreaID       uint                `json:"spawn_area_id" gorm:"not null;constraint:OnDelete:CASCADE;"`
-	SpawnArea         SpawnArea           `json:"-"`
+	SpawnAreas        []SpawnArea         `json:"-" gorm:"many2many;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	MinLevel          uint8               `json:"min_level" gorm:"not null;default:1"`
 	MaxLevel          uint8               `json:"max_level" gorm:"not null;default:100"`
 	Probability       float64             `json:"probability" gorm:"not null"`
