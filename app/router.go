@@ -2,10 +2,12 @@ package app
 
 import (
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/myOmikron/RustymonBackend/configs"
 	"github.com/myOmikron/RustymonBackend/handler"
 	"github.com/myOmikron/echotools/worker"
 	"gorm.io/gorm"
+	"path/filepath"
 )
 
 func defineRoutes(e *echo.Echo, config *configs.RustymonConfig, db *gorm.DB, wp worker.Pool) {
@@ -20,7 +22,7 @@ func defineRoutes(e *echo.Echo, config *configs.RustymonConfig, db *gorm.DB, wp 
 		Config:     config,
 		WorkerPool: wp,
 	}
-	
+
 	e.GET("/serverinfo", serverinfo.Serverinfo())
 
 	e.GET("/logout", account.Logout())
@@ -28,6 +30,12 @@ func defineRoutes(e *echo.Echo, config *configs.RustymonConfig, db *gorm.DB, wp 
 
 	e.POST("/login", account.Login())
 	e.POST("/register", account.Register())
-	e.POST("/resetPasswordByUsername", account.ResetPasswordUsername())
-	e.POST("/resetPasswordByEmail", account.ResetPasswordEmail())
+
+	e.POST("/requestPasswordResetByUsername", account.RequestPasswordResetUsername())
+	e.POST("/requestPasswordResetByEmail", account.RequestPasswordResetEmail())
+	e.GET("/resetPassword", account.PasswordReset())
+	e.POST("/confirmPasswordReset", account.ConfirmPasswordReset())
+
+	group := e.Group("/static")
+	group.Use(middleware.Static(filepath.Join("/home/omikron/git/RustymonBackend/static")))
 }

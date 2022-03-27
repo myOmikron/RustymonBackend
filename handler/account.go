@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"github.com/labstack/echo/v4"
@@ -15,12 +16,15 @@ import (
 	"github.com/myOmikron/echotools/worker"
 	"gorm.io/gorm"
 	"net/mail"
+	"net/url"
+	"time"
 )
 
 var (
-	ErrLoginFailed   = errors.New("login failed")
-	ErrUsernameTaken = errors.New("username is taken")
-	ErrEmailTaken    = errors.New("email is taken")
+	ErrLoginFailed   = errors.New("login has failed")
+	ErrUsernameTaken = errors.New("username is already taken")
+	ErrEmailTaken    = errors.New("email is already taken")
+	ErrTokenInvalid  = errors.New("token is not valid (anymore)")
 )
 
 type AccountHandler struct {
@@ -114,11 +118,69 @@ func (a *AccountHandler) Logout() echo.HandlerFunc {
 	})
 }
 
+const pwResetText = `Hi %s,
+
+it seems like you have requested a password reset.
+To proceed, click the following link:
+
+%s
+
+It will be valid for 1 hour.
+
+You haven't requested a password reset?
+Then just ignore this mail.
+
+-- Rustymon
+`
+
+func (a *AccountHandler) sendResetPasswordMail(user *utilitymodels.User) {
+	var count int64
+	var token string
+
+	var rbytes = make([]byte, 32)
+	for {
+		if _, err := rand.Read(rbytes); err != nil {
+			fmt.Println(err)
+			return
+		}
+		token = fmt.Sprintf("%x", rbytes)
+
+		a.DB.Where("token = ?", token).Find(&models.PasswordReset{}).Count(&count)
+		if count == 0 {
+			break
+		}
+	}
+
+	pwr := models.PasswordReset{
+		User:       *user,
+		Token:      token,
+		ValidUntil: time.Now().Add(time.Hour),
+	}
+
+	var body string
+	if uri, err := url.ParseRequestURI(a.Config.Server.PublicURI); err != nil {
+		fmt.Println(err)
+		return
+	} else {
+		uri.Path = "/resetPassword"
+		uri.RawQuery = "token=" + token
+		body = fmt.Sprintf(pwResetText, user.Username, uri.String())
+	}
+
+	if err := a.DB.Create(&pwr).Error; err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	mailTask := tasks.NewMailTask(&a.Config.Mail, []string{user.Email}, "Password reset", body)
+	a.WorkerPool.AddTask(mailTask)
+}
+
 type ResetPasswordUsernameForm struct {
 	Username *string `json:"username" echotools:"required;not empty"`
 }
 
-func (a *AccountHandler) ResetPasswordUsername() echo.HandlerFunc {
+func (a *AccountHandler) RequestPasswordResetUsername() echo.HandlerFunc {
 	return middleware.Wrap(func(c *Context) error {
 		var f ResetPasswordUsernameForm
 
@@ -130,8 +192,7 @@ func (a *AccountHandler) ResetPasswordUsername() echo.HandlerFunc {
 		var userCount int64
 		a.DB.Where("username = ?", *f.Username).Find(&user).Count(&userCount)
 		if userCount == 1 {
-			mailTask := tasks.NewMailTask(&a.Config.Mail, []string{user.Email}, "Password reset", "Test mail")
-			a.WorkerPool.AddTask(mailTask)
+			a.sendResetPasswordMail(&user)
 		} else {
 			c.Logger().Info("Found multiple matching users")
 		}
@@ -144,7 +205,7 @@ type ResetPasswordEmailForm struct {
 	Email *string `json:"email" echotools:"required;not empty"`
 }
 
-func (a *AccountHandler) ResetPasswordEmail() echo.HandlerFunc {
+func (a *AccountHandler) RequestPasswordResetEmail() echo.HandlerFunc {
 	return middleware.Wrap(func(c *Context) error {
 		var f ResetPasswordEmailForm
 
@@ -156,12 +217,61 @@ func (a *AccountHandler) ResetPasswordEmail() echo.HandlerFunc {
 		var user utilitymodels.User
 		a.DB.Where("email = ?", *f.Email).Find(&user).Count(&userCount)
 		if userCount == 1 {
-			mailTask := tasks.NewMailTask(&a.Config.Mail, []string{user.Email}, "Password reset", "Test mail")
-			a.WorkerPool.AddTask(mailTask)
+			a.sendResetPasswordMail(&user)
 		} else {
 			c.Logger().Infof("Found %d matching users", userCount)
 		}
 
 		return c.JSON(200, u.JsonResponse{Success: true})
+	})
+}
+
+func (a *AccountHandler) PasswordReset() echo.HandlerFunc {
+	return middleware.Wrap(func(c *Context) error {
+		token := c.QueryParam("token")
+
+		return c.Render(200, "password-reset", token)
+	})
+}
+
+type ConfirmPasswordResetForm struct {
+	Token    string `json:"token" echotools:"required;not empty"`
+	Password string `json:"password" echotools:"required;not empty"`
+}
+
+func (a *AccountHandler) ConfirmPasswordReset() echo.HandlerFunc {
+	return middleware.Wrap(func(c *Context) error {
+		var f ConfirmPasswordResetForm
+
+		if err := echo.FormFieldBinder(c).String("token", &f.Token).String("password", &f.Password).BindError(); err != nil {
+			c.Logger().Info(err.Error())
+			return c.JSON(400, u.JsonResponse{Error: "invalid parameter value"})
+		}
+
+		if f.Token == "" || f.Password == "" {
+			return c.JSON(400, u.JsonResponse{Error: "invalid parameter value"})
+		}
+
+		var pwReset models.PasswordReset
+		var count int64
+		if err := a.DB.Where("token = ?", f.Token).Find(&pwReset).Count(&count).Error; err != nil {
+			return c.JSON(500, u.JsonResponse{Error: middleware.ErrDatabaseError.Error()})
+		}
+
+		if count == 1 {
+			if time.Now().After(pwReset.ValidUntil) {
+				a.DB.Delete(&pwReset)
+				return c.Render(200, "error", ErrTokenInvalid.Error())
+			} else {
+				if err := auth.SetNewPassword(a.DB, pwReset.UserID, f.Password); err != nil {
+					return c.JSON(500, u.JsonResponse{Error: middleware.ErrDatabaseError.Error()})
+				}
+			}
+		} else {
+			return c.Render(200, "error", ErrTokenInvalid.Error())
+		}
+
+		return c.Render(200, "success", "Your password was changed")
+
 	})
 }

@@ -21,6 +21,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"html/template"
 	"io/fs"
 	"io/ioutil"
 	"net"
@@ -123,6 +124,9 @@ func StartServer(configPath string) {
 		&models.PlayerPokemon{},
 
 		&models.Player{},
+
+		// Account specific
+		&models.PasswordReset{},
 	)
 
 	// Insert Pokémon up to ID 809
@@ -173,6 +177,12 @@ func StartServer(configPath string) {
 			DisableLogging: true,
 		},
 	))
+
+	// Template rendering
+	renderer := &TemplateRenderer{
+		templates: template.Must(template.ParseGlob("templates/*.gohtml")),
+	}
+	e.Renderer = renderer
 
 	// Routes
 	defineRoutes(e, config, db, wp)

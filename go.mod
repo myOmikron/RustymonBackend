@@ -8,7 +8,7 @@ require (
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
 	github.com/labstack/echo/v4 v4.7.2
 	github.com/labstack/gommon v0.3.1
-	github.com/myOmikron/echotools v0.0.0-20220324185818-ddf72467bb7d
+	github.com/myOmikron/echotools v0.0.0-20220326025444-e450badfef81
 	github.com/pelletier/go-toml v1.9.4
 	gorm.io/driver/mysql v1.3.2
 	gorm.io/driver/postgres v1.3.1
@@ -34,7 +34,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.12 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/myOmikron/masochism v0.0.0-20220325210757-5ca978eeaaef // indirect
+	github.com/myOmikron/masochism v0.0.0-20220325214050-3977b0b28df9 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.1 // indirect
 	golang.org/x/crypto v0.0.0-20220321153916-2c7772ba3064 // indirect
