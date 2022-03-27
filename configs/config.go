@@ -13,6 +13,8 @@ var allowedDrivers = []string{"sqlite", "mysql", "postgresql"}
 type Server struct {
 	ListenAddress string
 	ListenPort    uint16
+	PublicURI     string
+	TemplateDir   string
 }
 
 type Database struct {

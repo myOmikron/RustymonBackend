@@ -29,6 +29,10 @@ Password = ""
 [Server]
 ListenAddress = "127.0.0.1"
 ListenPort = 8080
+# This defines the address, rustymon is available for users.
+# E.g.: https://rustymon.example.com or http://rustymon.example.com:8080
+PublicURI = ""
+TemplateDir = "templates/"
 
 [Rustymon]
 # Registration via app can be disabled by changing this field to true.
