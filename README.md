@@ -74,6 +74,29 @@ Attach it on all endpoints that require authentication.
 
 This endpoint is used to log out a user. It also invalidates any session cookies sent to the server.
 
+### Request password reset
+- Method `POST`
+- Endpoint: `/requestPasswordResetByUsername` and `/requestPasswordResetByEmail`
+
+As both, username and email must be unique, they both can be used to identify
+a user. If the user was found, an email with further instructions for resetting
+the password will be sent.
+
+**Body**:
+```json
+{
+  "username": ""
+}
+```
+
+or 
+
+```json
+{
+  "email": ""
+}
+```
+
 ### Serverinfo
 - Method: `GET`
 - Endpoint: `/serverinfo`
@@ -82,6 +105,7 @@ This endpoint is used to log out a user. It also invalidates any session cookies
 ```json
 {
   "version": 0,
-  "registration_disabled": false
+  "registration_disabled": false,
+  "password_reset_disabled": false
 }
 ```
