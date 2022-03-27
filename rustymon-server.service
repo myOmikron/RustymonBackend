@@ -11,11 +11,12 @@ DynamicUser=yes
 # ProtectHome=read-only
 # RemoveIPC=yes
 
+# RuntimeDirectory=
 LogsDirectory=rustymon-server
 StateDirectory=rustymon-server
-
-# RuntimeDirectory=
 WorkingDirectory=/var/lib/rustymon-server
+ConfigurationDirectory=rustymon-server
+
 ExecStart=/usr/local/bin/rustymon-server start
 ExecReload=/usr/bin/kill -s HUP $MAINPID
 ExecStop=/usr/bin/kill -s INT $MAINPID
