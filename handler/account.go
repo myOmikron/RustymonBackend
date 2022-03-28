@@ -10,6 +10,7 @@ import (
 	"github.com/myOmikron/RustymonBackend/tasks"
 	"github.com/myOmikron/echotools/auth"
 	"github.com/myOmikron/echotools/database"
+	"github.com/myOmikron/echotools/logging"
 	"github.com/myOmikron/echotools/middleware"
 	u "github.com/myOmikron/echotools/utility"
 	"github.com/myOmikron/echotools/utilitymodels"
@@ -27,6 +28,8 @@ var (
 	ErrTokenInvalid          = errors.New("token is not valid (anymore)")
 	ErrPasswordResetDisabled = errors.New("unauthenticated password reset is disabled")
 )
+
+var log = logging.GetLogger("account")
 
 type AccountHandler struct {
 	DB         *gorm.DB
@@ -98,7 +101,7 @@ func (a *AccountHandler) Login() echo.HandlerFunc {
 
 		user, err := auth.Authenticate(a.DB, *l.Username, *l.Password)
 		if err != nil || user == nil {
-			c.Logger().Info(err)
+			log.Info(err.Error())
 			return c.JSON(403, u.JsonResponse{Error: ErrLoginFailed.Error()})
 		} else {
 			if err := middleware.Login(a.DB, user, c); err != nil {
@@ -198,7 +201,7 @@ func (a *AccountHandler) RequestPasswordResetUsername() echo.HandlerFunc {
 		if userCount == 1 {
 			a.sendResetPasswordMail(&user)
 		} else {
-			c.Logger().Info("Found multiple matching users")
+			log.Info("Found multiple matching users")
 		}
 
 		return c.JSON(200, u.JsonResponse{Success: true})
@@ -226,7 +229,7 @@ func (a *AccountHandler) RequestPasswordResetEmail() echo.HandlerFunc {
 		if userCount == 1 {
 			a.sendResetPasswordMail(&user)
 		} else {
-			c.Logger().Infof("Found %d matching users", userCount)
+			log.Infof("Found %d matching users", userCount)
 		}
 
 		return c.JSON(200, u.JsonResponse{Success: true})
@@ -257,7 +260,7 @@ func (a *AccountHandler) ConfirmPasswordReset() echo.HandlerFunc {
 		var f ConfirmPasswordResetForm
 
 		if err := echo.FormFieldBinder(c).String("token", &f.Token).String("password", &f.Password).BindError(); err != nil {
-			c.Logger().Info(err.Error())
+			log.Info(err.Error())
 			return c.JSON(400, u.JsonResponse{Error: "invalid parameter value"})
 		}
 
