@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/myOmikron/RustymonBackend/utils"
 	"github.com/myOmikron/echotools/color"
+	"net/url"
+	"os"
 	"strings"
 )
 
@@ -80,6 +82,31 @@ func (conf *RustymonConfig) CheckConfig() *ConfigError {
 		}
 	}
 
+	if !strings.HasPrefix(conf.Server.PublicURI, "https://") &&
+		!strings.HasPrefix(conf.Server.PublicURI, "http://") {
+		return &ConfigError{
+			Err:       errors.New("invalid public uri prefix. Only https:// or http:// are valid prefixes"),
+			Section:   "[Server]",
+			Parameter: "PublicURI",
+		}
+	}
+
+	if _, err := url.Parse(conf.Server.PublicURI); err != nil {
+		return &ConfigError{
+			Err:       errors.New("invalid public uri"),
+			Section:   "[Server]",
+			Parameter: "PublicURI",
+		}
+	}
+
+	if _, err := os.Stat(conf.Server.TemplateDir); err != nil {
+		return &ConfigError{
+			Err:       err,
+			Section:   "[Server]",
+			Parameter: "TemplateDir",
+		}
+	}
+
 	// Check database part
 	if !utils.Contains(conf.Database.Driver, allowedDrivers) {
 		return &ConfigError{
@@ -111,7 +138,59 @@ func (conf *RustymonConfig) CheckConfig() *ConfigError {
 		}
 	}
 
-	// TODO Add more checks
+	if _, serr := os.Stat(conf.Logging.LogFile); errors.Is(serr, os.ErrNotExist) {
+		if testlog, ferr := os.Create(conf.Logging.LogFile); ferr != nil {
+			return &ConfigError{
+				Err:       ferr,
+				Section:   "[Logging]",
+				Parameter: "LogFile",
+			}
+		} else {
+			// We can leave the file empty, as logging will open it anyway
+			testlog.Close()
+		}
+	} else if errors.Is(serr, os.ErrPermission) {
+		c := ConfigError{
+			Err:       serr,
+			Section:   "[Logging]",
+			Parameter: "LogFile",
+		}
+		fmt.Println(c.Error())
+		os.Exit(1)
+	}
+
+	if conf.Logging.LogMaxDays <= 0 {
+		return &ConfigError{
+			Err:       errors.New("must be > 0"),
+			Section:   "[Logging]",
+			Parameter: "LogMaxDays",
+		}
+	}
+
+	if conf.Logging.LogMaxCapacity <= 0 {
+		return &ConfigError{
+			Err:       errors.New("must be > 0"),
+			Section:   "[Logging]",
+			Parameter: "LogMaxCapacity",
+		}
+	}
+
+	if conf.Logging.LogMaxBackups < 0 {
+		return &ConfigError{
+			Err:       errors.New("must be >= 0"),
+			Section:   "[Logging]",
+			Parameter: "LogMaxBackups",
+		}
+	}
+
+	if conf.Logging.LogQueueSize <= 0 {
+		return &ConfigError{
+			Err:       errors.New("must be > 0"),
+			Section:   "[Logging]",
+			Parameter: "LogQueueSize",
+		}
+	}
+
 	return nil
 }
 
