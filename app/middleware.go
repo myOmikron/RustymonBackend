@@ -20,6 +20,7 @@ func InitializeMiddleware(e *echo.Echo, db *gorm.DB) {
 	age := time.Hour * 24
 	e.Use(middleware.Session(
 		db,
+		log,
 		&middleware.SessionConfig{
 			Secure:         &f,
 			CookieAge:      &age,
