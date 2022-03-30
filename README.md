@@ -128,6 +128,19 @@ Attach it on all endpoints that require authentication.
 
 This endpoint is used to log out a user. It also invalidates any session cookies sent to the server.
 
+### Set password
+- Method: `POST`
+- Endpoint: `/setPassword`
+
+You can use this endpoint to set a password. It requires a valid session cookie.
+
+**Body**:
+```json
+{
+  "password": "new_password"
+}
+```
+
 ### Request password reset
 - Method `POST`
 - Endpoint: `/requestPasswordResetByUsername` and `/requestPasswordResetByEmail`
