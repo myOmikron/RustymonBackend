@@ -292,3 +292,23 @@ func (a *AccountHandler) ConfirmPasswordReset() echo.HandlerFunc {
 
 	})
 }
+
+type SetPasswordForm struct {
+	Password string `json:"-" echotools:"required,not empty"`
+}
+
+func (a *AccountHandler) SetPassword() echo.HandlerFunc {
+	return middleware.LoginRequired(func(c *Context) error {
+		var f SetPasswordForm
+
+		if err := u.ValidateJsonForm(c, &f); err != nil {
+			return c.JSON(400, u.JsonResponse{Error: err.Error()})
+		}
+
+		if err := auth.SetNewPassword(a.DB, *c.GetUserID(), f.Password); err != nil {
+			return c.JSON(400, u.JsonResponse{Error: err.Error()})
+		}
+
+		return c.JSON(200, u.JsonResponse{Success: true})
+	})
+}
