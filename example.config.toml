@@ -29,7 +29,8 @@ Password = ""
 [Server]
 ListenAddress = "127.0.0.1"
 ListenPort = 8080
-# This defines the address, rustymon is available for users.
+# This defines the address, rustymon is available for users. This address is
+# also when sending password reset mails
 # E.g.: https://rustymon.example.com or http://rustymon.example.com:8080
 PublicURI = ""
 # Add each host / domain this server should be accessed by.
