@@ -81,7 +81,7 @@ func StartServer(configPath string) {
 	wp.Start()
 
 	// Middleware
-	InitializeMiddleware(e, db)
+	InitializeMiddleware(e, db, config)
 
 	// Template rendering
 	renderer := &TemplateRenderer{

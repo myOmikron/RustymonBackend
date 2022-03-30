@@ -32,6 +32,16 @@ ListenPort = 8080
 # This defines the address, rustymon is available for users.
 # E.g.: https://rustymon.example.com or http://rustymon.example.com:8080
 PublicURI = ""
+# Add each host / domain this server should be accessed by.
+# In scheme: https://rustymon.example.com
+AllowedHosts = [
+    "",
+]
+# You can set this to true, if rustymon is deployed behin a reverse proxy
+# and therefore has no TLS configured. You can still set your AllowedHosts
+# to enforce the use of https:// and add the X-Forwarded-Proto header on
+# your reverse proxy.
+UseForwardedProtoHeader = true
 TemplateDir = "templates/"
 
 [Logging]

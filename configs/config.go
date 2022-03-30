@@ -13,10 +13,12 @@ import (
 var allowedDrivers = []string{"sqlite", "mysql", "postgresql"}
 
 type Server struct {
-	ListenAddress string
-	ListenPort    uint16
-	PublicURI     string
-	TemplateDir   string
+	ListenAddress           string
+	ListenPort              uint16
+	PublicURI               string
+	AllowedHosts            []string
+	UseForwardedProtoHeader bool
+	TemplateDir             string
 }
 
 type Logging struct {
@@ -104,6 +106,30 @@ func (conf *RustymonConfig) CheckConfig() *ConfigError {
 			Err:       err,
 			Section:   "[Server]",
 			Parameter: "TemplateDir",
+		}
+	}
+
+	if len(conf.Server.AllowedHosts) == 0 {
+		return &ConfigError{
+			Err:       errors.New("empty value is forbidden, as the server will not respond to anything"),
+			Section:   "[Server]",
+			Parameter: "AllowedHosts",
+		}
+	}
+	for _, allowedHost := range conf.Server.AllowedHosts {
+		if !strings.HasPrefix(allowedHost, "https://") && !strings.HasPrefix(allowedHost, "http://") {
+			return &ConfigError{
+				Err:       errors.New("must be starting with either http:// or https://"),
+				Section:   "[Section]",
+				Parameter: "AllowedHosts",
+			}
+		}
+		if _, err := url.Parse(allowedHost); err != nil {
+			return &ConfigError{
+				Err:       err,
+				Section:   "[Section]",
+				Parameter: "AllowedHosts",
+			}
 		}
 	}
 
