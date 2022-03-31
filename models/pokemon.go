@@ -1,28 +1,30 @@
 package models
 
+import "github.com/myOmikron/echotools/utilitymodels"
+
 type WeatherType struct {
-	ID uint `gorm:"primarykey" json:"id"`
+	utilitymodels.CommonSoftDelete
 }
 
 type MoonType struct {
-	ID uint `gorm:"primarykey" json:"id"`
+	utilitymodels.CommonSoftDelete
 }
 
 type TimeType struct {
-	ID uint `gorm:"primarykey" json:"id"`
+	utilitymodels.CommonSoftDelete
 }
 
 type SpawnArea struct {
-	ID uint `gorm:"primarykey" json:"id"`
+	utilitymodels.CommonSoftDelete
 }
 
 type Modifier struct {
-	ID       uint    `json:"id" gorm:"primarykey"`
+	utilitymodels.CommonSoftDelete
 	Modifier float64 `json:"modifier" gorm:"not null"`
 }
 
 type Condition struct {
-	ID         uint     `gorm:"primarykey"`
+	utilitymodels.CommonSoftDelete
 	Index      uint     `gorm:"not null;default:1"` // Greater is better xD. May be omitted
 	ModifierID uint     `json:"modifier_id" gorm:"not null;constraint:OnDelete:CASCADE"`
 	Modifier   Modifier `json:"-"`
@@ -33,14 +35,14 @@ type Condition struct {
 }
 
 type HeldItemCondition struct {
-	ID          uint    `gorm:"primarykey"`
+	utilitymodels.CommonSoftDelete
 	ItemID      uint    `json:"item_id" gorm:"not null;constraint:OnDelete:CASCADE"`
 	Item        Item    `json:"-"`
 	Probability float64 `json:"probability" gorm:"not null"`
 }
 
 type PokemonSpawnRelation struct {
-	ID                uint                `gorm:"primarykey"`
+	utilitymodels.CommonSoftDelete
 	PokemonID         uint                `json:"pokemon_id" gorm:"not null;constraint:OnDelete:CASCADE;"`
 	Pokemon           Pokemon             `json:"-"`
 	SpawnAreas        []SpawnArea         `json:"-" gorm:"many2many;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
@@ -53,5 +55,5 @@ type PokemonSpawnRelation struct {
 }
 
 type Pokemon struct {
-	ID uint `gorm:"primarykey" json:"id"`
+	ID uint `json:"id"`
 }

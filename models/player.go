@@ -5,7 +5,7 @@ import (
 )
 
 type PlayerPokemonMove struct {
-	utilitymodels.Common
+	utilitymodels.CommonSoftDelete
 	PlayerPokemonID uint  `json:"player_pokemon_id"`
 	MoveID          uint  `json:"move_id"`
 	Move            Move  `json:"-" gorm:"constraint:OnDelete:CASCADE;"`
@@ -14,7 +14,7 @@ type PlayerPokemonMove struct {
 }
 
 type PlayerPokemon struct {
-	utilitymodels.Common
+	utilitymodels.CommonSoftDelete
 	PlayerID uint `json:"player_id"`
 
 	// Static content
@@ -57,24 +57,32 @@ type PlayerPokemon struct {
 }
 
 type PlayerItem struct {
-	utilitymodels.Common
+	utilitymodels.CommonSoftDelete
 	PlayerID uint   `json:"player_id" gorm:"not null"`
 	Amount   uint16 `json:"amount" gorm:"not null"`
 	ItemID   uint   `json:"item_id" gorm:"not null"`
 	Item     Item   `json:"-" gorm:"constraint:OnDelete:CASCADE;"`
 }
 
+type PlayerConfirmEmail struct {
+	utilitymodels.CommonSoftDelete
+	Email string `gorm:"not null"`
+	Token string `gorm:"not null;unique"`
+}
+
 type Player struct {
-	utilitymodels.Common
-	UserID      uint               `json:"user_id" gorm:"not null"`
-	User        utilitymodels.User `json:"-" gorm:"constraint:OnDelete:CASCADE;"`
-	TrainerName string             `json:"trainer_name"`
-	Language    uint8              `json:"language" gorm:"default:0"` // Language: 0: English; 1: German
-	Female      bool               `json:"female"`
-	Money       uint32             `json:"money" gorm:"default:0"`
-	Friends     []*Player          `json:"friends" gorm:"many2many:player_friends;"`
-	Items       []PlayerItem       `json:"items" gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
-	Pokedex     []PokedexEntry     `json:"pokedex" gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
-	PokeBox     []PlayerPokemon    `json:"poke_box" gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
-	Party       []PlayerPokemon    `json:"party"  gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	utilitymodels.CommonSoftDelete
+	UserID         uint               `json:"user_id" gorm:"not null"`
+	User           utilitymodels.User `json:"-" gorm:"constraint:OnDelete:CASCADE;"`
+	ConfirmEmailID uint               `json:"-"`
+	ConfirmEmail   PlayerConfirmEmail `json:"-" gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	TrainerName    string             `json:"trainer_name"`
+	Language       uint8              `json:"language" gorm:"default:0"` // Language: 0: English; 1: German
+	Female         bool               `json:"female"`
+	Money          uint32             `json:"money" gorm:"default:0"`
+	Friends        []*Player          `json:"friends" gorm:"many2many:player_friends;"`
+	Items          []PlayerItem       `json:"items" gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	Pokedex        []PokedexEntry     `json:"pokedex" gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	PokeBox        []PlayerPokemon    `json:"poke_box" gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	Party          []PlayerPokemon    `json:"party"  gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 }
