@@ -239,9 +239,6 @@ type ResetPasswordUsernameForm struct {
 
 func (a *AccountHandler) RequestPasswordResetUsername() echo.HandlerFunc {
 	return middleware.Wrap(func(c *Context) error {
-		if a.Config.Rustymon.PasswordResetDisabled {
-			return c.JSON(503, u.JsonResponse{Error: ErrPasswordResetDisabled.Error()})
-		}
 		var f ResetPasswordUsernameForm
 
 		if err := u.ValidateJsonForm(c, &f); err != nil {
@@ -267,9 +264,6 @@ type ResetPasswordEmailForm struct {
 
 func (a *AccountHandler) RequestPasswordResetEmail() echo.HandlerFunc {
 	return middleware.Wrap(func(c *Context) error {
-		if a.Config.Rustymon.PasswordResetDisabled {
-			return c.JSON(503, u.JsonResponse{Error: ErrPasswordResetDisabled.Error()})
-		}
 		var f ResetPasswordEmailForm
 
 		if err := u.ValidateJsonForm(c, &f); err != nil {
@@ -291,9 +285,6 @@ func (a *AccountHandler) RequestPasswordResetEmail() echo.HandlerFunc {
 
 func (a *AccountHandler) PasswordReset() echo.HandlerFunc {
 	return middleware.Wrap(func(c *Context) error {
-		if a.Config.Rustymon.PasswordResetDisabled {
-			return c.JSON(503, u.JsonResponse{Error: ErrPasswordResetDisabled.Error()})
-		}
 		token := c.QueryParam("token")
 
 		return c.Render(200, "password-reset", token)
@@ -307,9 +298,6 @@ type ConfirmPasswordResetForm struct {
 
 func (a *AccountHandler) ConfirmPasswordReset() echo.HandlerFunc {
 	return middleware.Wrap(func(c *Context) error {
-		if a.Config.Rustymon.PasswordResetDisabled {
-			return c.JSON(503, u.JsonResponse{Error: ErrPasswordResetDisabled.Error()})
-		}
 		var f ConfirmPasswordResetForm
 
 		if err := echo.FormFieldBinder(c).String("token", &f.Token).String("password", &f.Password).BindError(); err != nil {
