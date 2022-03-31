@@ -60,6 +60,3 @@ LogQueueSize = 100
 # Registration via app can be disabled by changing this field to true.
 # This will remove the API endpoint "/register". Registration via CLI is still possible.
 RegistrationDisabled = false
-# As configurting a mailserver is required to allow self-service password reset, it is possible to disable this
-# functionality with this setting
-PasswordResetDisabled = false

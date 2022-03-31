@@ -47,8 +47,7 @@ type Mail struct {
 }
 
 type Rustymon struct {
-	RegistrationDisabled  bool
-	PasswordResetDisabled bool
+	RegistrationDisabled bool
 }
 
 type RustymonConfig struct {
