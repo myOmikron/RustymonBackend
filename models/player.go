@@ -77,7 +77,6 @@ type Player struct {
 	ConfirmEmailID uint               `json:"-"`
 	ConfirmEmail   PlayerConfirmEmail `json:"-" gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	TrainerName    string             `json:"trainer_name"`
-	Language       uint8              `json:"language" gorm:"default:0"` // Language: 0: English; 1: German
 	Female         bool               `json:"female"`
 	Money          uint32             `json:"money" gorm:"default:0"`
 	Friends        []*Player          `json:"friends" gorm:"many2many:player_friends;"`
