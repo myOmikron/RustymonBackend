@@ -72,6 +72,7 @@ func InitializeDatabase(config *configs.RustymonConfig) (db *gorm.DB) {
 
 		// Account specific
 		&models.PasswordReset{},
+		&models.PlayerConfirmEmail{},
 	)
 
 	// Insert Pokémon up to ID 809

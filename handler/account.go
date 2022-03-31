@@ -37,6 +37,19 @@ type AccountHandler struct {
 	WorkerPool worker.Pool
 }
 
+const confirmEmailText = `Hi %s,
+
+welcome to Rustymon!
+
+To confirm your account, use the following link:
+
+%s
+
+If you don't have an idea why you received this email, you can just ignore it.
+
+-- Rustymon
+`
+
 type RegisterForm struct {
 	Username    *string `json:"username" echotools:"required;not empty"`
 	Password    *string `json:"password" echotools:"required;not empty"`
@@ -61,27 +74,63 @@ func (a *AccountHandler) Register() echo.HandlerFunc {
 			*f.Email = address.Address
 		}
 
-		var userCount, emailCount int64
+		var userCount, emailCount, confirmEmailCount int64
 		a.DB.Find(&utilitymodels.User{}, "username = ?", *f.Username).Count(&userCount)
 		a.DB.Find(&utilitymodels.User{}, "email = ?", *f.Email).Count(&emailCount)
-		if emailCount > 0 {
+		a.DB.Find(&models.PlayerConfirmEmail{}, "email = ?", *f.Email).Count(&confirmEmailCount)
+		if emailCount > 0 || confirmEmailCount > 0 {
 			return c.JSON(409, u.JsonResponse{Error: ErrEmailTaken.Error()})
 		}
 		if userCount > 0 {
 			return c.JSON(409, u.JsonResponse{Error: ErrUsernameTaken.Error()})
 		}
 
-		user, err := database.CreateUser(a.DB, *f.Username, *f.Password, *f.Email, true)
+		var token string
+		var count int64
+		var buff = make([]byte, 32)
+		for {
+			if _, err := rand.Read(buff); err != nil {
+				log.Error(err.Error())
+				return c.JSON(500, u.JsonResponse{Error: "internal server error"})
+			}
+			token = fmt.Sprintf("%x", buff)
+
+			a.DB.Find(&models.PlayerConfirmEmail{}, "token = ?", token).Count(&count)
+			if count == 0 {
+				break
+			}
+		}
+		confirmEmail := models.PlayerConfirmEmail{
+			Email: *f.Email,
+			Token: token,
+		}
+		if err := a.DB.Create(&confirmEmail).Error; err != nil {
+			return c.JSON(500, u.JsonResponse{Error: "there was a problem updating the database"})
+		}
+
+		user, err := database.CreateUser(a.DB, *f.Username, *f.Password, nil, true)
 		if err != nil {
 			return c.JSON(500, u.JsonResponse{Error: err.Error()})
 		}
 		player := models.Player{
-			User:        *user,
-			TrainerName: *f.TrainerName,
+			User:         *user,
+			TrainerName:  *f.TrainerName,
+			ConfirmEmail: confirmEmail,
 		}
 		if err = a.DB.Create(&player).Error; err != nil {
 			return c.JSON(500, u.JsonResponse{Error: err.Error()})
 		}
+
+		target, _ := url.Parse(a.Config.Server.PublicURI)
+		target.Path = "/confirmEmail"
+		target.RawQuery = "token=" + token
+		t := tasks.NewMailTask(
+			&a.Config.Mail,
+			[]string{*f.Email},
+			"Confirm your email",
+			fmt.Sprintf(confirmEmailText, *f.Username, target),
+		)
+		a.WorkerPool.AddTask(t)
 
 		return c.JSON(200, u.JsonResponse{Success: true})
 	})
@@ -104,6 +153,10 @@ func (a *AccountHandler) Login() echo.HandlerFunc {
 			log.Info(err.Error())
 			return c.JSON(403, u.JsonResponse{Error: ErrLoginFailed.Error()})
 		} else {
+			// Check if mail confirmation is pending
+			if user.Email == nil {
+				return c.JSON(400, u.JsonResponse{Error: "email confirmation is pending"})
+			}
 			if err := middleware.Login(a.DB, user, c); err != nil {
 				return c.JSON(500, u.JsonResponse{Error: err.Error()})
 			}
@@ -176,7 +229,7 @@ func (a *AccountHandler) sendResetPasswordMail(user *utilitymodels.User) {
 		return
 	}
 
-	mailTask := tasks.NewMailTask(&a.Config.Mail, []string{user.Email}, "Password reset", body)
+	mailTask := tasks.NewMailTask(&a.Config.Mail, []string{*user.Email}, "Password reset", body)
 	a.WorkerPool.AddTask(mailTask)
 }
 
@@ -310,5 +363,40 @@ func (a *AccountHandler) SetPassword() echo.HandlerFunc {
 		}
 
 		return c.JSON(200, u.JsonResponse{Success: true})
+	})
+}
+
+func (a *AccountHandler) ConfirmEmail() echo.HandlerFunc {
+	return middleware.Wrap(func(c *Context) error {
+		if a.Config.Rustymon.RegistrationDisabled {
+			return c.JSON(503, u.JsonResponse{Error: ErrPasswordResetDisabled.Error()})
+		}
+		token := c.QueryParam("token")
+
+		var count int64
+		var confirmation models.PlayerConfirmEmail
+		a.DB.Find(&confirmation, "token = ?", token).Count(&count)
+		if count == 0 {
+			return c.Render(200, "error", "Token invalid")
+		}
+
+		var player models.Player
+		a.DB.Find(&player, "confirm_email_id = ?", confirmation.ID).Count(&count)
+		if count == 0 {
+			return c.Render(200, "error", "Token invalid")
+		}
+
+		tx := a.DB.Model(&utilitymodels.User{}).Where("id = ?", player.UserID).Update("email", confirmation.Email)
+		if tx.Error != nil {
+			log.Error(tx.Error.Error())
+			return c.JSON(500, u.JsonResponse{Error: "error updating the database"})
+		}
+
+		if err := a.DB.Delete(&confirmation).Error; err != nil {
+			log.Error(err.Error())
+			return c.JSON(500, u.JsonResponse{Error: "error updating the database"})
+		}
+
+		return c.Render(200, "success", "Email is confirmed. You can close this page now!")
 	})
 }
