@@ -14,6 +14,7 @@ import (
 	"html/template"
 	"io/fs"
 	"io/ioutil"
+	"net"
 	"os"
 )
 
@@ -28,7 +29,7 @@ var asciiArt = `
 |_|   \_|\____(___/ \___)__  |_|_|_|\___/|_| |_|
                         (____/   & a bunch of other languages`
 
-func StartServer(configPath string) {
+func StartServer(configPath string, isReloading bool) {
 	config := &configs.RustymonConfig{}
 
 	if configBytes, err := ioutil.ReadFile(configPath); errors.Is(err, fs.ErrNotExist) {
@@ -92,15 +93,28 @@ func StartServer(configPath string) {
 	// Routes
 	defineRoutes(e, config, db, wp)
 
+	// Start RPC listener on unix socket
+	var cliSock net.Listener
+	go InitializeRPC(&cliSock, config.Server.CLIUnixSocket, db, isReloading)
+
 	log.Infof("Listening on %s", color.Colorize(color.PURPLE, config.GetListenString()))
 	execution.SignalStart(e, config.GetListenString(), &execution.Config{
 		ReloadFunc: func() {
-			StartServer(configPath)
+			if cliSock != nil {
+				cliSock.Close()
+			}
+			StartServer(configPath, true)
 		},
 		StopFunc: func() {
+			if cliSock != nil {
+				cliSock.Close()
+			}
 			logging.Stop()
 		},
 		TerminateFunc: func() {
+			if cliSock != nil {
+				cliSock.Close()
+			}
 			logging.Stop()
 		},
 	})

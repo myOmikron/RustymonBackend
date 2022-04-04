@@ -23,6 +23,6 @@ func main() {
 
 	switch {
 	case startParser.Invoked:
-		app.StartServer(*configPath)
+		app.StartServer(*configPath, false)
 	}
 }
