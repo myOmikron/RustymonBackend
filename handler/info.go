@@ -22,9 +22,8 @@ type serverInfoData struct {
 func (s *ServerInfoHandler) Serverinfo() echo.HandlerFunc {
 	return middleware.Wrap(func(c *Context) error {
 		serverInfo := serverInfoData{
-			Version:               1,
-			RegistrationDisabled:  s.Config.Rustymon.RegistrationDisabled,
-			PasswordResetDisabled: s.Config.Rustymon.PasswordResetDisabled,
+			Version:              1,
+			RegistrationDisabled: s.Config.Rustymon.RegistrationDisabled,
 		}
 
 		return c.JSON(200, u.JsonResponse{Success: true, Data: &serverInfo})
