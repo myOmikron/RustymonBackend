@@ -44,6 +44,8 @@ AllowedHosts = [
 # your reverse proxy.
 UseForwardedProtoHeader = true
 TemplateDir = "templates/"
+# Path to the UnixSocket that is used for the CLI tool
+CLIUnixSocket = "/run/rustymon-server/cli.sock"
 
 [Logging]
 LogFile = "/var/log/rustymon-server/rustymon.log"

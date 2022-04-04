@@ -19,6 +19,7 @@ type Server struct {
 	AllowedHosts            []string
 	UseForwardedProtoHeader bool
 	TemplateDir             string
+	CLIUnixSocket           string
 }
 
 type Logging struct {

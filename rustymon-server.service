@@ -11,7 +11,7 @@ DynamicUser=yes
 # ProtectHome=read-only
 # RemoveIPC=yes
 
-# RuntimeDirectory=
+RuntimeDirectory=rustymon-server
 LogsDirectory=rustymon-server
 StateDirectory=rustymon-server
 WorkingDirectory=/var/lib/rustymon-server
