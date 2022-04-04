@@ -27,7 +27,6 @@ func defineRoutes(e *echo.Echo, config *configs.RustymonConfig, db *gorm.DB, wp 
 
 	e.GET("/logout", account.Logout())
 	e.POST("/logout", account.Logout())
-
 	e.POST("/login", account.Login())
 	e.POST("/register", account.Register())
 
@@ -37,8 +36,6 @@ func defineRoutes(e *echo.Echo, config *configs.RustymonConfig, db *gorm.DB, wp 
 	e.POST("/confirmPasswordReset", account.ConfirmPasswordReset())
 
 	e.GET("/confirmEmail", account.ConfirmEmail())
-
-	e.POST("/setPassword", account.SetPassword())
 
 	group := e.Group("/static")
 	group.Use(middleware.Static(filepath.Join("/home/omikron/git/RustymonBackend/static")))
