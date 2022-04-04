@@ -6,6 +6,13 @@ import (
 	"github.com/myOmikron/RustymonBackend/rpcrequests"
 )
 
+func altSocket(parser *argparse.Parser) *string {
+	return parser.String("", "socket", &argparse.Option{
+		Default: "/run/rustymon-server/cli.sock",
+		Help:    "Set an alternative unix socket path",
+	})
+}
+
 func main() {
 	parser := argparse.NewParser("rustymon", "CLI tool for rustymon-server", &argparse.ParserConfig{})
 
@@ -26,6 +33,7 @@ func main() {
 		Required: true,
 		Help:     "Display name of the user",
 	})
+	sockRegister := altSocket(registerParser)
 
 	if err := parser.Parse(nil); err != nil {
 		fmt.Println(err.Error())
@@ -34,6 +42,6 @@ func main() {
 
 	switch {
 	case registerParser.Invoked:
-		rpcrequests.Register(*usernameRegister, *passwordRegister, *emailRegister, *trainerNameRegister)
+		rpcrequests.Register(*sockRegister, *usernameRegister, *passwordRegister, *emailRegister, *trainerNameRegister)
 	}
 }

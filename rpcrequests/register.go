@@ -9,8 +9,8 @@ import (
 	"os"
 )
 
-func Register(username, password, email, trainerName string) {
-	if conn, err := rpc.DialHTTP("unix", "./sock.sock"); err != nil {
+func Register(sockPath, username, password, email, trainerName string) {
+	if conn, err := rpc.DialHTTP("unix", sockPath); err != nil {
 		log.Fatalln("dialing error: ", err)
 	} else {
 		req := rpchandler.RegisterRequest{
