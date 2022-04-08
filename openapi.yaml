@@ -1,0 +1,350 @@
+---
+openapi: 3.0.1
+info:
+  title: Rustymon Server
+  description: ""
+  version: 0.1.0
+servers:
+  - url: /
+tags:
+  - name: General
+    description: ""
+  - name: Account
+    description: ""
+security:
+  - cookieAuth: []
+paths:
+  /api/v1/serverinfo:
+    get:
+      tags:
+        - General
+      summary: Get information about the server
+      security: []
+      responses:
+        200:
+          description: Information about the server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Serverinfo'
+  /api/v1/accounts/register:
+    post:
+      tags:
+        - Account
+      summary: Register a user
+      security: []
+      requestBody:
+        $ref: '#/components/requestBodies/AccountRegisterForm'
+      responses:
+        201:
+          description: Account was created, a mail to confirm
+            access to the mail account will be sent.
+        400:
+          $ref: '#/components/responses/BadRequestError'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+        503:
+          description: Method is unavailable because registration is disabled
+  /api/v1/accounts/login:
+    post:
+      tags:
+        - Account
+      summary: Log a user in
+      security: []
+      requestBody:
+        $ref: '#/components/requestBodies/AccountLoginForm'
+      responses:
+        200:
+          description: Successfully authenticated.
+
+
+            The session ID is returned in a cookie named `session_id`.
+            You need to include this cookie in subsequent requests.
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: "session_id=da022a25f013....; Max-Age=86400"
+        400:
+          $ref: '#/components/responses/BadRequestError'
+        401:
+          description: Login has failed
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/accounts/logout:
+    post:
+      tags:
+        - Account
+      summary: Invalidate a user's session
+      security: []
+      description: "Include the `session_id` Cookie provided by the login endpoint."
+      responses:
+        200:
+          description: "Logged out successfully"
+        400:
+          description: "Cookie missing"
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/accounts/password:
+    patch:
+      tags:
+        - Account
+      summary: Trigger a password reset as unauthenticated user
+      description: Use this endpoint to trigger a password reset as unauthenticated user.
+
+        If the user exists, a mail with further steps to continue
+        the password reset is sent to its mail address.
+      security: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetUsername'
+      responses:
+        202:
+          description: "If existent, a password reset has been triggered"
+        400:
+          $ref: '#/components/responses/BadRequestError'
+  /api/v1/accounts/me:
+    get:
+      tags:
+        - Account
+      summary: Retrieves the user model of the logged in user.
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+components:
+  schemas:
+    Serverinfo:
+      type: object
+      properties:
+        version:
+          type: integer
+          format: uint16
+          example: 1
+        registration_disabled:
+          type: boolean
+          default: false
+    Item:
+      type: array
+      items:
+        type: object
+        properties:
+          amount:
+            type: integer
+            format: uint16
+          item_id:
+            type: integer
+            format: uint
+      example:
+        - amount: 1337
+          item_id: 420
+    Pokemon:
+      type: object
+      properties:
+        pokemon_id:
+          type: integer
+          format: uint
+        sex:
+          type: integer
+          format: uint8
+        shiny:
+          type: boolean
+          default: false
+        nature:
+          type: integer
+          format: uint8
+        ball_used:
+          type: integer
+          format: uint
+        name:
+          type: string
+        current_hp:
+          type: integer
+          format: uint16
+        exp:
+          type: integer
+          format: uint32
+        form:
+          type: integer
+          format: uint8
+        ability:
+          type: integer
+          format: uint8
+        happiness:
+          type: integer
+          format: uint8
+        status:
+          type: integer
+          format: uint8
+        egg_steps:
+          type: integer
+          format: uint16
+        moves:
+          type: array
+          items:
+            type: object
+            properties:
+              move_id:
+                type: integer
+                format: uint
+              pp:
+                type: integer
+                format: uint8
+              pp_up:
+                type: integer
+                format: uint8
+        latitude:
+          type: number
+          format: float
+        longitude:
+          type: number
+          format: float
+      example:
+        - pokemon_id: 25
+          sex: 1
+          shiny: false
+          nature: 0
+          ball_used: 0
+          name:
+          current_hp: 432
+          exp: 243
+          form: 0
+          ability: 0
+          happiness: 70
+          status: 0
+          egg_steps: 0
+          moves:
+            - move_id: 32
+              pp: 23
+              pp_up: 12
+          latitude: 48.123
+          longitude: 10.42
+    User:
+      type: object
+      properties:
+        username:
+          type: string
+          example: Us3rn4m3
+        email:
+          type: string
+          example: username@example.com
+        trainer_name:
+          type: string
+          example: Fuji
+        trainer_sprite:
+          type: integer
+          format: uint8
+        money:
+          type: integer
+          format: uint32
+        friends:
+          type: array
+          items:
+            type: integer
+          example:
+            - 42
+            - 69
+        items:
+          $ref: '#/components/schemas/Item'
+        pokedex:
+          type: array
+          items:
+            type: object
+            properties:
+              pokemon_id:
+                type: integer
+                format: uint
+              caught_count:
+                type: integer
+                format: uint16
+              seen_count:
+                type: integer
+                format: uint16
+              shiny_seen_count:
+                type: integer
+                format: uint16
+              shiny_caught_count:
+                type: integer
+                format: uint16
+          example:
+            - pokemon_id: 25
+              caught_count: 3
+              seen_count: 1337
+              shiny_seen_count: 1
+              shiny_caught_count: 0
+        pokebox:
+          type: array
+          items:
+            $ref: '#/components/schemas/Pokemon'
+        party:
+          type: array
+          items:
+            $ref: '#/components/schemas/Pokemon'
+    GenericError:
+      type: "object"
+      properties:
+        error:
+          type: string
+          example: Error message
+    PasswordResetUsername:
+      type: object
+      properties:
+        username:
+          type: string
+          example: Us3rn4m3
+  requestBodies:
+    AccountRegisterForm:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              username:
+                type: string
+              email:
+                type: string
+              password:
+                type: string
+              trainer_name:
+                type: string
+    AccountLoginForm:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              username:
+                type: string
+                example: user123
+              password:
+                type: string
+                example: s3cr3tp4ssw0rd
+  responses:
+    InternalServerError:
+      description: "Internal server error. Refer to error message for further information."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/GenericError"
+    BadRequestError:
+      description: "Bad request. Refer to error message for further information."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/GenericError"
+    Error:
+      description: ""
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/GenericError"
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: session_id
