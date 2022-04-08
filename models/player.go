@@ -77,7 +77,7 @@ type Player struct {
 	ConfirmEmailID uint               `json:"-"`
 	ConfirmEmail   PlayerConfirmEmail `json:"-" gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	TrainerName    string             `json:"trainer_name"`
-	Female         bool               `json:"female"`
+	TrainerSprite  uint8              `json:"trainer_sprite"`
 	Money          uint32             `json:"money" gorm:"default:0"`
 	Friends        []*Player          `json:"friends" gorm:"many2many:player_friends;"`
 	Items          []PlayerItem       `json:"items" gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
